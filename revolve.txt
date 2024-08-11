@@ -1,0 +1,102 @@
+local player = game.Players.LocalPlayer
+local targetPlayer = nil
+local revolving = false
+local distance = 10 -- Distance from the target
+local speed = 100 -- Speed of revolution
+local heightOffset = 5 -- Height offset to ensure the player is above the ground
+
+-- Function to find a player by partial name
+local function findPlayer(partialName)
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #partialName) == partialName:lower() then
+            return p
+        end
+    end
+    return nil
+end
+
+-- Function to start revolving around the target player
+local function startRevolving(targetName)
+    local character = player.Character
+    if not character then return end
+
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    -- Find the target player by partial name
+    targetPlayer = findPlayer(targetName)
+    if not targetPlayer or targetPlayer == player then
+        print("Target player not found or same as self.")
+        return
+    end
+    
+    local targetCharacter = targetPlayer.Character
+    if not targetCharacter then return end
+    
+    local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+    if not targetHumanoidRootPart then return end
+
+    -- Teleport to the target player
+    humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame + Vector3.new(0, heightOffset, 0)
+
+    -- Create BodyGyro and BodyVelocity to handle revolving
+    local bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.CFrame = humanoidRootPart.CFrame
+    bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    bodyGyro.P = 10000
+    bodyGyro.Parent = humanoidRootPart
+
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new()
+    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bodyVelocity.P = 10000
+    bodyVelocity.Parent = humanoidRootPart
+
+    revolving = true
+
+    while revolving do
+        local angle = tick() * 2 -- Speed of revolution
+
+        -- Calculate the new position
+        local offsetX = math.cos(angle) * distance
+        local offsetZ = math.sin(angle) * distance
+        local newPosition = targetHumanoidRootPart.Position + Vector3.new(offsetX, heightOffset, offsetZ)
+
+        -- Move towards the new position
+        local moveDirection = (newPosition - humanoidRootPart.Position).unit
+        bodyVelocity.Velocity = moveDirection * speed
+
+        -- Maintain orientation towards the target
+        bodyGyro.CFrame = CFrame.lookAt(humanoidRootPart.Position, targetHumanoidRootPart.Position)
+
+        wait(0.1) -- Adjust time to control the smoothness of rotation
+    end
+
+    -- Cleanup
+    bodyGyro:Destroy()
+    bodyVelocity:Destroy()
+end
+
+-- Function to stop revolving
+local function stopRevolving()
+    revolving = false
+end
+
+-- Listen for chat commands
+player.Chatted:Connect(function(message)
+    local command, targetName = message:match("^(;revolve) (.+)$")
+    if command and targetName then
+        startRevolving(targetName)
+    end
+    
+    if message:lower() == ";unrevolve" then
+        stopRevolving()
+    end
+end)
+
+-- Reinitialize after player reset or death
+player.CharacterAdded:Connect(function(character)
+    if revolving then
+        startRevolving(targetPlayer.Name)
+    end
+end)

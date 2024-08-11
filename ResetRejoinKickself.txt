@@ -1,0 +1,42 @@
+local player = game.Players.LocalPlayer
+local teleportService = game:GetService("TeleportService")
+local placeId = game.PlaceId  -- The placeId of the current game
+
+-- Function to reset the player's character
+local function resetCharacter()
+    if player.Character then
+        player.Character:BreakJoints()
+    end
+end
+
+-- Function to rejoin the same server
+local function rejoinServer()
+    teleportService:TeleportToPlaceInstance(placeId, game.JobId, player)
+end
+
+-- Function to hop to a different server
+local function serverHop()
+    -- Here, you might want to specify how you get a list of servers. This is a generic approach.
+    -- Redirecting to the main place with a new server.
+    teleportService:Teleport(placeId, player)
+end
+
+-- Function to kick the player from the server
+local function kickSelf()
+    player:Kick("You kicked yourself from the server.")
+end
+
+-- Listen for chat commands
+player.Chatted:Connect(function(message)
+    local command = message:lower()
+
+    if command == ";reset" then
+        resetCharacter()
+    elseif command == ";rejoin" then
+        rejoinServer()
+    elseif command == ";hop" then
+        serverHop()
+    elseif command == ";kickself" then
+        kickSelf()
+    end
+end)

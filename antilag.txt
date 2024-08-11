@@ -1,0 +1,45 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+-- Define the common color to reduce lag
+local commonColor = Color3.fromRGB(150, 150, 150) -- Neutral gray color
+
+-- Function to simplify the appearance of parts
+local function simplifyParts()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            -- Set the part's color to the common color
+            obj.Color = commonColor
+            obj.Material = Enum.Material.SmoothPlastic -- Simplify material to smooth plastic
+            obj.Reflectance = 0 -- Remove any reflectance
+
+            -- Remove any textures, decals, or surface appearances
+            for _, child in pairs(obj:GetChildren()) do
+                if child:IsA("Texture") or child:IsA("Decal") or child:IsA("SurfaceAppearance") then
+                    child:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";antilag" then
+        simplifyParts()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Anti-Lag Activated";
+            Text = "All objects simplified to reduce lag.";
+            Duration = 5;
+        })
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

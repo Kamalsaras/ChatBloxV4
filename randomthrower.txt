@@ -1,0 +1,114 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Variables
+local walkThroughActive = false
+local spinningActive = false
+local spinSpeed = 500
+local player = Players.LocalPlayer
+
+-- Functions
+local function setPlayersWalkThrough(enabled)
+    if enabled then
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                originalCollisions[otherPlayer.Name] = {}
+                for _, part in pairs(otherPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        originalCollisions[otherPlayer.Name][part] = part.CanCollide
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+        print("Players are now walk-through.")
+    else
+        for playerName, parts in pairs(originalCollisions) do
+            local otherPlayer = Players:FindFirstChild(playerName)
+            if otherPlayer and otherPlayer.Character then
+                for part, originalCollision in pairs(parts) do
+                    if part and part.Parent then
+                        part.CanCollide = originalCollision
+                    end
+                end
+            end
+        end
+        originalCollisions = {}
+        print("Players are no longer walk-through.")
+    end
+end
+
+local function startSpinning()
+    if not spinningActive then
+        spinningActive = true
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+            bodyAngularVelocity.Parent = hrp
+            bodyAngularVelocity.AngularVelocity = Vector3.new(0, spinSpeed, 0)
+            bodyAngularVelocity.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bodyAngularVelocity.P = math.huge
+
+            -- Stop spinning when the player is no longer touching another player
+            local function onTouched(otherPart)
+                if otherPart.Parent and otherPart.Parent:FindFirstChildOfClass("Humanoid") then
+                    if otherPart.Parent ~= player.Character then
+                        startSpinning()
+                    end
+                end
+            end
+
+            hrp.Touched:Connect(onTouched)
+
+            -- Cleanup when spinning is stopped
+            local function onCharacterChanged()
+                if not player.Character:FindFirstChild("HumanoidRootPart") then
+                    spinningActive = false
+                    bodyAngularVelocity:Destroy()
+                end
+            end
+
+            player.CharacterAdded:Connect(onCharacterChanged)
+            player.CharacterRemoving:Connect(onCharacterChanged)
+        end
+    end
+end
+
+local function stopSpinning()
+    spinningActive = false
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        for _, obj in pairs(hrp:GetChildren()) do
+            if obj:IsA("BodyAngularVelocity") then
+                obj:Destroy()
+            end
+        end
+    end
+end
+
+-- Command handlers
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";randomthrower" then
+        if not walkThroughActive then
+            walkThroughActive = true
+            setPlayersWalkThrough(true)
+        end
+        startSpinning()
+    elseif command == ";randomthrowoff" then
+        if walkThroughActive then
+            walkThroughActive = false
+            setPlayersWalkThrough(false)
+        end
+        stopSpinning()
+    end
+end
+
+-- Connect chat listener for LocalPlayer
+player.Chatted:Connect(onChatted)

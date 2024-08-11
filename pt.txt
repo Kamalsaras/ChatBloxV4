@@ -1,0 +1,77 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Variables
+local walkThroughActive = false
+local originalCollisions = {}
+local player = Players.LocalPlayer
+local function setPlayersWalkThrough(enabled)
+    if enabled then
+        -- Save original collision settings and apply walk-through
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                originalCollisions[otherPlayer.Name] = {}
+                for _, part in pairs(otherPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        originalCollisions[otherPlayer.Name][part] = part.CanCollide
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+        print("Players are now walk-through.")
+    else
+        -- Restore original collision settings
+        for playerName, parts in pairs(originalCollisions) do
+            local player = Players:FindFirstChild(playerName)
+            if player and player.Character then
+                for part, originalCollision in pairs(parts) do
+                    if part and part.Parent then
+                        part.CanCollide = originalCollision
+                    end
+                end
+            end
+        end
+        originalCollisions = {}
+        print("Players are no longer walk-through.")
+    end
+end
+
+-- Command handler
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";pt" then
+        if not walkThroughActive then
+            walkThroughActive = true
+            setPlayersWalkThrough(true)
+            RunService.Heartbeat:Connect(function()
+                if walkThroughActive then
+                    setPlayersWalkThrough(true)
+                end
+            end)
+        else
+            print("Walk-through is already active.")
+        end
+    elseif command == ";pt off" then
+        if walkThroughActive then
+            walkThroughActive = false
+            setPlayersWalkThrough(false)
+        else
+            print("Walk-through is already off.")
+        end
+    end
+end
+
+-- Connect chat listener for LocalPlayer
+player.Chatted:Connect(onChatted)
+
+-- Handle respawn or reset
+player.CharacterAdded:Connect(function()
+    if walkThroughActive then
+        setPlayersWalkThrough(true)
+    end
+end)

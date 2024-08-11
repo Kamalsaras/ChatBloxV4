@@ -1,0 +1,94 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local originalFOV = camera.FieldOfView
+local showingFPS = false
+local fpsLabel = nil
+
+-- Function to set the field of view
+local function setFOV(value)
+    local num = tonumber(value)
+    if num then
+        camera.FieldOfView = num
+    else
+        print("Invalid FOV value")
+    end
+end
+
+-- Function to reset the field of view
+local function resetFOV()
+    camera.FieldOfView = originalFOV
+end
+
+-- Function to show FPS
+local function showFPS()
+    if showingFPS then return end
+    showingFPS = true
+
+    fpsLabel = Instance.new("TextLabel")
+    fpsLabel.Size = UDim2.new(0, 100, 0, 50)
+    fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+    fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    fpsLabel.BackgroundTransparency = 0.5
+    fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    fpsLabel.TextStrokeTransparency = 0.7
+    fpsLabel.TextSize = 18
+    fpsLabel.Parent = player:WaitForChild("PlayerGui")
+
+    local frameCount = 0
+    local timeElapsed = 0
+
+    local function updateFPS()
+        while showingFPS do
+            frameCount = frameCount + 1
+            timeElapsed = timeElapsed + RunService.RenderStepped:Wait()
+
+            if timeElapsed >= 1 then
+                local fps = frameCount / timeElapsed
+                fpsLabel.Text = "FPS: " .. math.floor(fps)
+                frameCount = 0
+                timeElapsed = 0
+            end
+        end
+    end
+
+    coroutine.wrap(updateFPS)()
+end
+
+-- Function to hide FPS
+local function hideFPS()
+    if not showingFPS then return end
+    showingFPS = false
+    if fpsLabel then
+        fpsLabel:Destroy()
+    end
+end
+
+-- Handle commands
+local function handleCommand(command)
+    local args = command:split(" ")
+    local cmd = args[1]
+    
+    if cmd == ";fov" and args[2] then
+        setFOV(args[2])
+    elseif cmd == ";fovreset" then
+        resetFOV()
+    elseif cmd == ";fps" then
+        showFPS()
+    elseif cmd == ";hidefps" then
+        hideFPS()
+    else
+        print("Unknown command")
+    end
+end
+
+-- Listen for chat messages
+local function onChatMessage(message)
+    if message:sub(1, 1) == ";" then
+        handleCommand(message)
+    end
+end
+
+player.Chatted:Connect(onChatMessage)

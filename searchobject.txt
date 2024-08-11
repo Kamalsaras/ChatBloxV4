@@ -1,0 +1,180 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- UI elements
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ESPMenu"
+screenGui.Parent = Player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 150)
+frame.Position = UDim2.new(0, 50, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Visible = false
+frame.Parent = screenGui
+frame.Draggable = true
+
+local inputBox = Instance.new("TextBox")
+inputBox.Size = UDim2.new(0, 200, 0, 50)
+inputBox.Position = UDim2.new(0, 10, 0, 10)
+inputBox.PlaceholderText = "Enter partial name..."
+inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+inputBox.Parent = frame
+
+local searchButton = Instance.new("TextButton")
+searchButton.Size = UDim2.new(0, 80, 0, 50)
+searchButton.Position = UDim2.new(0, 220, 0, 10)
+searchButton.Text = "Search"
+searchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+searchButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+searchButton.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 80, 0, 50)
+closeButton.Position = UDim2.new(0, 10, 0, 70)
+closeButton.Text = "Close"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+closeButton.Parent = frame
+
+local clearButton = Instance.new("TextButton")
+clearButton.Size = UDim2.new(0, 80, 0, 50)
+clearButton.Position = UDim2.new(0, 220, 0, 70)
+clearButton.Text = "Clear ESP"
+clearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+clearButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+clearButton.Parent = frame
+
+local espEnabled = false
+
+-- Function to create ESP
+local function createESP(part)
+    local esp = Instance.new("BillboardGui")
+    esp.Adornee = part
+    esp.Name = "ESP"
+    esp.Size = UDim2.new(0, 200, 0, 50)
+    esp.StudsOffset = Vector3.new(0, 2, 0)
+    esp.AlwaysOnTop = true
+    esp.MaxDistance = 1000
+    esp.Parent = part
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    textLabel.TextStrokeTransparency = 0.5
+    textLabel.Text = part.Name
+    textLabel.Parent = esp
+end
+
+-- Function to update ESP based on the search term
+local function updateESP(searchTerm)
+    for _, part in pairs(Workspace:GetDescendants()) do
+        if part:IsA("BasePart") and string.find(part.Name:lower(), searchTerm:lower()) then
+            if not part:FindFirstChild("ESP") then
+                createESP(part)
+            end
+        end
+    end
+end
+
+-- Function to clear ESP
+local function clearESP()
+    for _, part in pairs(Workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part:FindFirstChild("ESP") then
+            part:FindFirstChild("ESP"):Destroy()
+        end
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";searchobject" then
+        frame.Visible = not frame.Visible
+    elseif command == ";object" and args[2]:lower() == "esp" then
+        if args[3]:lower() == "on" then
+            espEnabled = true
+        elseif args[3]:lower() == "off" then
+            espEnabled = false
+            clearESP()
+        end
+    end
+end
+
+-- Button handlers
+searchButton.MouseButton1Click:Connect(function()
+    local searchTerm = inputBox.Text
+    if searchTerm and searchTerm ~= "" then
+        updateESP(searchTerm)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
+end)
+
+clearButton.MouseButton1Click:Connect(function()
+    clearESP()
+end)
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)
+
+-- Ensure the UI persists after player reset
+Player.CharacterAdded:Connect(function()
+    wait(1) -- Wait for the character to fully load
+    if not Player.PlayerGui:FindFirstChild("ESPMenu") then
+        screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "ESPMenu"
+        screenGui.Parent = Player:WaitForChild("PlayerGui")
+
+        frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 300, 0, 150)
+        frame.Position = UDim2.new(0, 50, 0, 50)
+        frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        frame.Visible = false
+        frame.Parent = screenGui
+        frame.Draggable = true
+
+        inputBox = Instance.new("TextBox")
+        inputBox.Size = UDim2.new(0, 200, 0, 50)
+        inputBox.Position = UDim2.new(0, 10, 0, 10)
+        inputBox.PlaceholderText = "Enter partial name..."
+        inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        inputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        inputBox.Parent = frame
+
+        searchButton = Instance.new("TextButton")
+        searchButton.Size = UDim2.new(0, 80, 0, 50)
+        searchButton.Position = UDim2.new(0, 220, 0, 10)
+        searchButton.Text = "Search"
+        searchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        searchButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        searchButton.Parent = frame
+
+        closeButton = Instance.new("TextButton")
+        closeButton.Size = UDim2.new(0, 80, 0, 50)
+        closeButton.Position = UDim2.new(0, 10, 0, 70)
+        closeButton.Text = "Close"
+        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        closeButton.Parent = frame
+
+        clearButton = Instance.new("TextButton")
+        clearButton.Size = UDim2.new(0, 80, 0, 50)
+        clearButton.Position = UDim2.new(0, 220, 0, 70)
+        clearButton.Text = "Clear ESP"
+        clearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        clearButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        clearButton.Parent = frame
+    end
+end)

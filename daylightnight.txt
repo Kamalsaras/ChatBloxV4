@@ -1,0 +1,79 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Lighting = game:GetService("Lighting")
+
+-- Store original lighting settings
+local originalLighting = {
+    Ambient = Lighting.Ambient,
+    Brightness = Lighting.Brightness,
+    OutdoorAmbient = Lighting.OutdoorAmbient,
+    TimeOfDay = Lighting.TimeOfDay
+}
+
+-- Function to create dynamic lighting effect
+local function createDynamicLighting(radius, brightness)
+    local light = Instance.new("PointLight")
+    light.Parent = Lighting
+    light.Range = radius
+    light.Brightness = brightness
+    light.Enabled = true
+end
+
+-- Function to remove dynamic lighting effect
+local function removeDynamicLighting()
+    for _, child in pairs(Lighting:GetChildren()) do
+        if child:IsA("PointLight") then
+            child:Destroy()
+        end
+    end
+end
+
+-- Function to set time of day
+local function setTimeOfDay(time)
+    Lighting.TimeOfDay = time
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";light" then
+        if #args >= 3 then
+            local radius = tonumber(args[2])
+            local brightness = tonumber(args[3])
+            if radius and brightness then
+                removeDynamicLighting()  -- Remove existing lights before adding new ones
+                createDynamicLighting(radius, brightness)
+                print("Lighting effect set with radius " .. radius .. " and brightness " .. brightness)
+            else
+                print("Invalid radius or brightness value.")
+            end
+        else
+            print("Please provide both radius and brightness.")
+        end
+    elseif command == ";day" then
+        setTimeOfDay("14:00:00")  -- Set to 2 PM for daylight
+        print("Time set to day.")
+    elseif command == ";night" then
+        setTimeOfDay("02:00:00")  -- Set to 2 AM for nighttime
+        print("Time set to night.")
+    end
+end
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)
+
+-- Ensure lighting settings persist after player reset
+Player.CharacterAdded:Connect(function()
+    wait(1) -- Wait for the character to fully load
+    if Lighting then
+        -- Reapply original lighting settings
+        Lighting.Ambient = originalLighting.Ambient
+        Lighting.Brightness = originalLighting.Brightness
+        Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
+        Lighting.TimeOfDay = originalLighting.TimeOfDay
+    end
+end)

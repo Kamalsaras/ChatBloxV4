@@ -1,0 +1,97 @@
+commands
+;playerlist
+;openmenu
+;closemenu
+;tp <username>
+;list
+;execute
+;stats
+;info username
+;serverage
+;esp
+;esp off
+;bring username
+;brall
+;undobrall
+;jumpboost
+;bridge
+;bridgeclear
+;lookitem
+;checkinv username
+;flashstep on
+;flashstep off
+;object esp on
+;object esp off
+;wall on
+;wall off
+;spectate username
+;spectate end
+;clone username
+;set point
+;teleport to point
+;walkthrough
+;walkthrough off
+;scale
+;disablescale
+;spin <speed>
+;unspin
+;fling
+;noclip
+;clip
+;flip
+;swim
+;unswim
+;teleport
+;fly
+;fly <speed>
+;unfly
+;hop
+;rejoin
+;kickself
+;glitch
+;closeglitch
+;unglitch
+;revolve <username>
+;unrevolve
+;searchobject
+;follow <username>
+;unfollow
+;reset
+;antilag
+;roleinfo <username>
+;espnonvisibleobj/;envo
+;offenvo
+;light <radius> <strength>
+;setp
+;tpp
+;objecttp <objectname>
+;jumpscare <username>
+;savegame
+;gravity <force>
+;night
+;day
+;coordinates
+;offcoordinates
+;fill <x> <y> <z> platform
+;fill <x> <y> <z> water
+;fov <value>
+;fovreset
+;xray on 
+;xray off
+;jump <value>
+;speed <value>
+;health <value>
+;resetstats
+;hitbox <username> <size>
+;hitboxall <size>
+;glitch2
+;unglitch2
+;bringobj <object name>
+;pt
+;pt off
+;fog <density>
+;fogclear
+;fogcolor <color>
+;shake <intensity>
+;stopshake
+;donate

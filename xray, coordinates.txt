@@ -1,0 +1,87 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local screenGui
+local coordinatesLabel
+local xrayEnabled = false
+local originalTransparency = {}
+local xrayObjects = {}
+
+-- Function to create or get the coordinates display
+local function getOrCreateCoordinatesDisplay()
+    local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("CoordinatesGUI")
+    if not gui then
+        gui = Instance.new("ScreenGui")
+        gui.Name = "CoordinatesGUI"
+        gui.ResetOnSpawn = false
+        gui.Parent = player:WaitForChild("PlayerGui")
+
+        -- Create coordinates label
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.2, 0, 0.1, 0)
+        label.Position = UDim2.new(0, 10, 0, 10)
+        label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        label.BackgroundTransparency = 0.5
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.TextScaled = true
+        label.Text = "Coordinates: N/A"
+        label.Parent = gui
+        coordinatesLabel = label
+    end
+    return gui
+end
+
+-- Function to update the coordinates label
+local function updateCoordinates()
+    if coordinatesLabel then
+        local position = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
+        if position then
+            coordinatesLabel.Text = string.format("Coordinates: X: %.2f Y: %.2f Z: %.2f", position.X, position.Y, position.Z)
+        end
+    end
+end
+
+-- Function to apply x-ray effect
+local function applyXRayEffect(enable)
+    if enable then
+        -- Apply x-ray effect
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                if not originalTransparency[obj] then
+                    originalTransparency[obj] = obj.Transparency
+                end
+                obj.Transparency = 0.8
+            end
+        end
+    else
+        -- Remove x-ray effect
+        for obj, transparency in pairs(originalTransparency) do
+            if obj and obj:IsA("BasePart") then
+                obj.Transparency = transparency
+            end
+        end
+        originalTransparency = {}
+    end
+end
+
+-- Function to handle commands
+local function onChatted(message)
+    message = message:lower()
+    if message == ";coordinates" then
+        getOrCreateCoordinatesDisplay()
+        RunService.RenderStepped:Connect(updateCoordinates)
+    elseif message == ";offcoordinates" then
+        local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("CoordinatesGUI")
+        if gui then
+            gui:Destroy()
+            coordinatesLabel = nil
+        end
+    elseif message == ";xray on" then
+        applyXRayEffect(true)
+    elseif message == ";xray off" then
+        applyXRayEffect(false)
+    end
+end
+
+-- Connect the chat function to the player's Chatted event
+player.Chatted:Connect(onChatted)

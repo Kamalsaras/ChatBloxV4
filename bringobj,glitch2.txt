@@ -1,0 +1,71 @@
+-- LocalScript
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local glitching = false
+local glitchConnection
+
+-- Function to start the glitch effect
+local function startGlitchEffect()
+    if not glitching then
+        glitching = true
+        glitchConnection = RunService.RenderStepped:Connect(function()
+            local character = Player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local randomOffset = Vector3.new(
+                    math.random(-1, 1),
+                    math.random(-1, 1),
+                    math.random(-1, 1)
+                ) * 0.5 -- Adjust the multiplier to control the intensity of the shake
+
+                character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.new(randomOffset))
+            end
+        end)
+    end
+end
+
+-- Function to stop the glitch effect
+local function stopGlitchEffect()
+    if glitching then
+        glitching = false
+        if glitchConnection then
+            glitchConnection:Disconnect()
+            glitchConnection = nil
+        end
+    end
+end
+
+-- Function to bring an object in front of the player
+local function bringObject(objectName)
+    for _, object in pairs(Workspace:GetDescendants()) do
+        if object:IsA("BasePart") and object.Name:lower():sub(1, #objectName) == objectName then
+            object.CFrame = Player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5) -- Places object 5 studs in front of the player
+        end
+    end
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";glitch2" then
+        startGlitchEffect()
+        print("Glitch effect started.")
+
+    elseif command == ";unglitch2" then
+        stopGlitchEffect()
+        print("Glitch effect stopped.")
+
+    elseif command == ";bringobj" and args[2] then
+        local objectName = args[2]:lower()
+        bringObject(objectName)
+        print("Attempted to bring object(s) named: " .. objectName)
+    end
+end
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)

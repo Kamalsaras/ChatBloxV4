@@ -1,0 +1,66 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Variables
+local player = Players.LocalPlayer
+local Noclip = nil
+local Clip = nil
+
+-- Noclip function
+local function noclip()
+    Clip = false
+    local function Nocl()
+        if Clip == false and player.Character ~= nil then
+            for _,v in pairs(player.Character:GetDescendants()) do
+                if v:IsA('BasePart') and v.CanCollide then
+                    v.CanCollide = false
+                end
+            end
+        end
+        wait(0.21) -- basic optimization
+    end
+    Noclip = RunService.Stepped:Connect(Nocl)
+end
+
+-- Clip function
+local function clip()
+    if Noclip then Noclip:Disconnect() end
+    Clip = true
+    if player.Character ~= nil then
+        for _,v in pairs(player.Character:GetDescendants()) do
+            if v:IsA('BasePart') and not v.CanCollide then
+                v.CanCollide = true
+            end
+        end
+    end
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:lower()
+
+    if args == ";noclip" then
+        noclip()
+        print("Noclip activated.")
+    elseif args == ";clip" then
+        clip()
+        print("Noclip deactivated.")
+    end
+end
+
+-- Ensure noclip is reactivated after death or reset
+local function onCharacterAdded(character)
+    if Clip == false then
+        noclip()
+    end
+end
+
+-- Event listeners
+player.Chatted:Connect(onChatted)
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- If the player already has a character when the script runs, ensure the noclip state is maintained
+if player.Character then
+    onCharacterAdded(player.Character)
+end

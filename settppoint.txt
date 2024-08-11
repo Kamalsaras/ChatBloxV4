@@ -1,0 +1,55 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local TeleportPoint = nil  -- Variable to store the teleportation point
+
+-- Function to set the teleportation point
+local function setTeleportPoint()
+    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        TeleportPoint = Player.Character.HumanoidRootPart.Position
+        print("Teleportation point set.")
+    else
+        print("Character not loaded yet.")
+    end
+end
+
+-- Function to teleport to the set point
+local function teleportToPoint()
+    if TeleportPoint then
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            Player.Character.HumanoidRootPart.CFrame = CFrame.new(TeleportPoint)
+            print("Teleported to the set point.")
+        else
+            print("Character not loaded yet.")
+        end
+    else
+        print("Teleportation point not set.")
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";setp" then
+        setTeleportPoint()
+    elseif command == ";tpp" then
+        teleportToPoint()
+    end
+end
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)
+
+-- Ensure teleportation point persists after player reset
+Player.CharacterAdded:Connect(function()
+    wait(1) -- Wait for the character to fully load
+    if TeleportPoint then
+        -- Ensure the character is moved to the teleportation point if it was set
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            Player.Character.HumanoidRootPart.CFrame = CFrame.new(TeleportPoint)
+        end
+    end
+end)

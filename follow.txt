@@ -1,0 +1,73 @@
+local player = game.Players.LocalPlayer
+local targetPlayer = nil
+local sticking = false
+
+-- Function to find a player by partial name
+local function findPlayer(partialName)
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #partialName) == partialName:lower() then
+            return p
+        end
+    end
+    return nil
+end
+
+-- Function to start sticking to the target player
+local function startSticking(targetName)
+    local character = player.Character
+    if not character then return end
+
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    -- Find the target player by partial name
+    targetPlayer = findPlayer(targetName)
+    if not targetPlayer or targetPlayer == player then
+        print("Target player not found or same as self.")
+        return
+    end
+    
+    local targetCharacter = targetPlayer.Character
+    if not targetCharacter then return end
+    
+    local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+    if not targetHumanoidRootPart then return end
+
+    sticking = true
+
+    while sticking do
+        if not targetCharacter or not targetHumanoidRootPart then
+            stopSticking()
+            return
+        end
+
+        -- Set the player's position to match the target's position
+        humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame
+
+        wait(0.1) -- Adjust time to control the smoothness of sticking
+    end
+end
+
+-- Function to stop sticking to the target
+local function stopSticking()
+    sticking = false
+end
+
+-- Listen for chat commands
+player.Chatted:Connect(function(message)
+    local command, targetName = message:match("^(;follow) (.+)$")
+    if command and targetName then
+        startSticking(targetName)
+    end
+    
+    if message:lower() == ";unfollow" then
+        stopSticking()
+    end
+end)
+
+-- Reinitialize after player reset or death
+player.CharacterAdded:Connect(function(character)
+    if sticking and targetPlayer then
+        startSticking(targetPlayer.Name)
+    end
+end)

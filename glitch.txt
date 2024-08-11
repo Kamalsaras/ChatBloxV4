@@ -1,0 +1,161 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local teleportPoints = {}
+local teleporting = false
+local screenGui
+local mainFrame
+
+-- Function to create or get the GlitchEffectGUI
+local function getOrCreateGlitchGUI()
+    local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("GlitchEffectGUI")
+    if not gui then
+        gui = Instance.new("ScreenGui")
+        gui.Name = "GlitchEffectGUI"
+        gui.ResetOnSpawn = false
+        gui.Parent = player:WaitForChild("PlayerGui")
+
+        -- Create main frame
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 300, 0, 400)
+        frame.Position = UDim2.new(0.5, -150, 0.5, -200)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        frame.Parent = gui
+        mainFrame = frame
+
+        -- Create teleport points frame
+        local pointsFrame = Instance.new("ScrollingFrame")
+        pointsFrame.Size = UDim2.new(1, 0, 0.8, 0)
+        pointsFrame.Position = UDim2.new(0, 0, 0, 0)
+        pointsFrame.CanvasSize = UDim2.new(0, 0, 5, 0)
+        pointsFrame.ScrollBarThickness = 8
+        pointsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        pointsFrame.Parent = frame
+
+        -- Create add point button
+        local addPointButton = Instance.new("TextButton")
+        addPointButton.Size = UDim2.new(0.5, -5, 0.1, -5)
+        addPointButton.Position = UDim2.new(0, 5, 0.9, -5)
+        addPointButton.Text = "Add Point"
+        addPointButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        addPointButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        addPointButton.Parent = frame
+
+        -- Create glitch button
+        local glitchButton = Instance.new("TextButton")
+        glitchButton.Size = UDim2.new(0.5, -5, 0.1, -5)
+        glitchButton.Position = UDim2.new(0.5, 5, 0.9, -5)
+        glitchButton.Text = "Glitch"
+        glitchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        glitchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        glitchButton.Parent = frame
+
+        -- Create close button
+        local closeButton = Instance.new("TextButton")
+        closeButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+        closeButton.Position = UDim2.new(0.9, 0, 0, 0)
+        closeButton.Text = "Close"
+        closeButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeButton.Parent = frame
+
+        -- Function to add a teleport point
+        local function addTeleportPoint()
+            local point = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
+            if point then
+                table.insert(teleportPoints, point)
+
+                local pointLabel = Instance.new("TextLabel")
+                pointLabel.Size = UDim2.new(1, 0, 0, 30)
+                pointLabel.Text = tostring(point)
+                pointLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+                pointLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                pointLabel.Parent = pointsFrame
+            end
+        end
+
+        -- Function to start glitch effect
+        local function startGlitchEffect()
+            teleporting = not teleporting
+            if teleporting then
+                glitchButton.Text = "Stop Glitch"
+            else
+                glitchButton.Text = "Glitch"
+            end
+
+            while teleporting do
+                for _, point in ipairs(teleportPoints) do
+                    if not teleporting then break end
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = CFrame.new(point)
+                    end
+                    RunService.Heartbeat:Wait() -- This waits for the next frame
+                end
+            end
+        end
+
+        -- Function to close the glitch UI
+        local function closeGlitchUI()
+            gui:Destroy()
+        end
+
+        -- Make the frame draggable
+        local function makeFrameDraggable(frame)
+            local dragging = false
+            local dragStart = nil
+            local startPos = nil
+
+            local function update(input)
+                local delta = input.Position - dragStart
+                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+
+            frame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = frame.Position
+
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
+                end
+            end)
+
+            frame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    if dragging then
+                        update(input)
+                    end
+                end
+            end)
+        end
+
+        -- Make the main frame draggable
+        makeFrameDraggable(frame)
+
+        -- Event listeners
+        addPointButton.MouseButton1Click:Connect(addTeleportPoint)
+        glitchButton.MouseButton1Click:Connect(startGlitchEffect)
+        closeButton.MouseButton1Click:Connect(closeGlitchUI)
+    end
+    return gui
+end
+
+-- Function to handle commands
+local function onChatted(message)
+    if message:lower() == ";glitch" then
+        getOrCreateGlitchGUI() -- Show the glitch UI
+    elseif message:lower() == ";closeglitch" then
+        local gui = player:FindFirstChild("PlayerGui"):FindFirstChild("GlitchEffectGUI")
+        if gui then
+            gui:Destroy() -- Close the glitch UI
+        end
+    end
+end
+
+-- Connect the chat function to the player's Chatted event
+player.Chatted:Connect(onChatted)

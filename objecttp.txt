@@ -1,0 +1,43 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+-- Function to teleport to an object by partial name
+local function teleportToObject(partialName)
+    local objects = {}
+    
+    -- Collect objects that match the partial name
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and string.find(obj.Name:lower(), partialName:lower()) then
+            table.insert(objects, obj)
+        end
+    end
+
+    if #objects > 0 then
+        local selectedObject = objects[math.random(1, #objects)]  -- Randomly select one object
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            Player.Character.HumanoidRootPart.CFrame = selectedObject.CFrame
+            print("Teleported to object:", selectedObject.Name)
+        else
+            print("Character not loaded yet.")
+        end
+    else
+        print("No objects found with partial name:", partialName)
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";objecttp" and args[2] then
+        local partialName = args[2]
+        teleportToObject(partialName)
+    end
+end
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)

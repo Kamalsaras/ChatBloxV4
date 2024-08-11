@@ -1,0 +1,84 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local espEnabled = false
+local highlightedObjects = {}
+
+-- Function to create ESP for non-visible objects
+local function createESP(object)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = object
+    billboard.Parent = playerGui
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Text = object.Name
+    textLabel.Parent = billboard
+
+    return billboard
+end
+
+-- Function to update ESP for non-visible objects
+local function updateESP()
+    if not espEnabled then return end
+
+    -- Clear previous highlights
+    for _, billboard in ipairs(highlightedObjects) do
+        billboard:Destroy()
+    end
+    highlightedObjects = {}
+
+    -- Iterate through all objects and apply ESP to non-visible ones
+    for _, object in ipairs(workspace:GetDescendants()) do
+        if object:IsA("BasePart") and object.Transparency > 0.5 then
+            local billboard = createESP(object)
+            table.insert(highlightedObjects, billboard)
+        end
+    end
+end
+
+-- Command functions
+local function enableESP()
+    if espEnabled then return end
+    espEnabled = true
+    updateESP()
+end
+
+local function disableESP()
+    if not espEnabled then return end
+    espEnabled = false
+
+    -- Clear all highlighted objects
+    for _, billboard in ipairs(highlightedObjects) do
+        billboard:Destroy()
+    end
+    highlightedObjects = {}
+end
+
+-- Handle chat commands
+local function handleCommand(command)
+    if command == ";espnonvisibleobj" or command == ";envo" then
+        enableESP()
+    elseif command == ";offenvo" then
+        disableESP()
+    else
+        print("Unknown command")
+    end
+end
+
+-- Listen for chat messages
+local function onChatMessage(message)
+    if message:sub(1, 1) == ";" then
+        handleCommand(message)
+    end
+end
+
+player.Chatted:Connect(onChatMessage)

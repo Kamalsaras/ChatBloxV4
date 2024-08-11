@@ -1,0 +1,62 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+local character = player.Character
+local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+local commandPrefix = ";"
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+    
+    if command == commandPrefix .. "jump" and tonumber(args[2]) then
+        local jumpPower = tonumber(args[2])
+        if humanoid then
+            humanoid.JumpPower = jumpPower
+        end
+    elseif command == commandPrefix .. "speed" and tonumber(args[2]) then
+        local walkSpeed = tonumber(args[2])
+        if humanoid then
+            humanoid.WalkSpeed = walkSpeed
+        end
+    elseif command == commandPrefix .. "health" and tonumber(args[2]) then
+        local health = tonumber(args[2])
+        if humanoid then
+            humanoid.Health = health
+        end
+    elseif command == commandPrefix .. "resetstats" then
+        if humanoid then
+            humanoid.JumpPower = 50
+            humanoid.WalkSpeed = 16
+            humanoid.Health = 100
+        end
+    elseif command == commandPrefix .. "fill" and args[2] and args[3] and args[4] then
+        local x, y, z = tonumber(args[2]), tonumber(args[3]), tonumber(args[4])
+        local fillType = args[5]:lower()
+        if fillType == "water" then
+            local waterPart = Instance.new("Part")
+            waterPart.Size = Vector3.new(10, 10, 10)
+            waterPart.Position = Vector3.new(x, y, z)
+            waterPart.Anchored = true
+            waterPart.CanCollide = false
+            waterPart.BrickColor = BrickColor.new("Bright blue")
+            waterPart.Material = Enum.Material.Water
+            waterPart.Parent = Workspace
+        elseif fillType == "platform" then
+            local platformPart = Instance.new("Part")
+            platformPart.Size = Vector3.new(10, 1, 10)
+            platformPart.Position = Vector3.new(x, y, z)
+            platformPart.Anchored = true
+            platformPart.CanCollide = true
+            platformPart.BrickColor = BrickColor.new("Bright green")
+            platformPart.Material = Enum.Material.SmoothPlastic
+            platformPart.Parent = Workspace
+        end
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

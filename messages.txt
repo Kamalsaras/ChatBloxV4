@@ -1,0 +1,229 @@
+-- LocalScript
+
+local function createNotification(message)
+    -- Create the ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "NotificationGui"
+    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    -- Create the Frame for the notification
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.3, 0, 0.15, 0)  -- Width: 30%, Height: 15% of screen size
+    frame.Position = UDim2.new(0.68, 0, 1, 0)  -- Start off-screen, slightly away from the right edge
+    frame.BackgroundTransparency = 0
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+
+    -- Create the UIGradient for the frame background
+    local uiGradient = Instance.new("UIGradient")
+    uiGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(66, 66, 66)),  -- Dark Blue at the top
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(28, 28, 28))   -- Dark Pink at the bottom
+    }
+    uiGradient.Rotation = 45  -- Diagonal gradient
+    uiGradient.Parent = frame
+
+    -- Create the gradient border
+    local border = Instance.new("Frame")
+    border.Size = UDim2.new(1, 4, 1, 4)  -- Extend border beyond frame
+    border.Position = UDim2.new(0, -2, 0, -2)  -- Center border around frame
+    border.ZIndex = frame.ZIndex - 1
+    border.Parent = frame
+
+    local borderGradient = Instance.new("UIGradient")
+    borderGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(180, 0, 0)),  -- Light Blue at the top
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(214, 30, 0))   -- Light Pink at the bottom
+    }
+    borderGradient.Rotation = 45  -- Diagonal gradient
+    borderGradient.Parent = border
+
+    -- Create the top bar for the close button
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, 0, 0.2, 0)  -- Top bar covering 20% height
+    topBar.BackgroundTransparency = 0.3
+    topBar.BorderSizePixel = 0
+    topBar.Parent = frame
+
+    -- Create the close (×) button
+    local closeButton = Instance.new("TextButton")
+    closeButton.Text = "×"
+    closeButton.Font = Enum.Font.SourceSans
+    closeButton.TextSize = 24
+    closeButton.TextColor3 = Color3.new(1, 1, 1)  -- White text
+    closeButton.BackgroundTransparency = 1
+    closeButton.Size = UDim2.new(0.1, 0, 1, 0)  -- Small button
+    closeButton.Position = UDim2.new(0.9, -5, 0, 0)  -- Positioned to the far right of the top bar, with padding
+    closeButton.Parent = topBar
+
+    -- Create the TextLabel for the notification text
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 0.8, 0)  -- Cover remaining 80% height below the top bar
+    textLabel.Position = UDim2.new(0, 0, 0.2, 0)  -- Positioned below the top bar
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = message
+    textLabel.Font = Enum.Font.SourceSans  -- Modern font
+    textLabel.TextSize = 20
+    textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
+    textLabel.TextWrapped = true  -- Wrap text to fit within the box
+    textLabel.TextYAlignment = Enum.TextYAlignment.Center
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.Parent = frame
+
+    -- Create the sound effect for notification appearance
+    local appearanceSound = Instance.new("Sound")
+    appearanceSound.SoundId = "rbxassetid://6026984224"
+    appearanceSound.Volume = 1
+    appearanceSound.Parent = screenGui
+    appearanceSound:Play()
+
+    -- Create the sound effect for close button
+    local closeSound = Instance.new("Sound")
+    closeSound.SoundId = "rbxassetid://6895079853"
+    closeSound.Volume = 1
+    closeSound.Parent = screenGui
+
+    -- Opening animation: Move the frame up from off-screen to its final position
+    frame:TweenPosition(
+        UDim2.new(0.68, 0, 0.85, 0),  -- Final position at the bottom right, closer to the right edge
+        Enum.EasingDirection.Out,
+        Enum.EasingStyle.Quad,
+        0.5,  -- Time it takes to move up
+        true
+    )
+
+    -- Close button functionality with fade-out animation
+    local function fadeOutAndDestroy()
+        for i = 1, 10 do
+            frame.BackgroundTransparency = frame.BackgroundTransparency + 0.08
+            border.BackgroundTransparency = border.BackgroundTransparency + 0.08  -- Fade the border as well
+            textLabel.TextTransparency = textLabel.TextTransparency + 0.08
+            topBar.BackgroundTransparency = topBar.BackgroundTransparency + 0.08
+            closeButton.TextTransparency = closeButton.TextTransparency + 0.08
+            wait(0.05)
+        end
+        screenGui:Destroy()
+    end
+
+    -- Trigger fade-out on close button click and play close sound
+    closeButton.MouseButton1Click:Connect(function()
+        closeSound:Play()
+        fadeOutAndDestroy()
+    end)
+
+    -- Wait for the notification to be displayed for 30 seconds, then auto-close
+    delay(04, fadeOutAndDestroy)
+end
+
+-- Table of command messages
+local commandMessages = {
+    [";openmenu"] = "Opened Menu.\nAccess various commands from here.",
+    [";list"] = "opened an teleportation UI.",
+    [";closemenu"] = "Closed Menu.\nType openmenu to reopen.",
+    [";tp"] = "Teleported you to the player.\nYou can use the full or partial name of the target.",
+    [";playerlist"] = "Displayed a list of all players in the server.\nHelpful for finding specific players quickly.",
+    [";execute"] = "Opened the script executor.\nRun custom scripts using this command.",
+    [";stats"] = "Stats menu opened.\nSet your health, speed, and more.",
+    [";info"] = "Opened information tab for the player.\nDisplays detailed info about the player.",
+    [";serverage"] = "Opened server age UI.\nDisplays how long the server has been running since you joined.",
+    [";esp"] = "Enabled ESP to highlight players.\nShows player names and roles.",
+    [";esp off"] = "Turned off ESP.\nPlayers will no longer be highlighted.",
+    [";bring"] = "Brought the player to you.\nThey are now at your location.",
+    [";brall"] = "Brought all players to you.\nEveryone is now at your location.",
+    [";undobrall"] = "Restored players to their previous positions.\nUndo the previous ;brall command.",
+    [";jumpboost"] = "Jump power boosted successfully.\nYou can now jump higher.",
+    [";bridge"] = "Bridge mode activated!\nJump and tap on the screen to create bridges.",
+    [";bridgeclear"] = "Cleared all spawned platforms.\nRemoved all created bridges.",
+    [";lookitem"] = "Searching who has the item.\nDisplays item ownership.",
+    [";checkinv username"] = "Checking inventory of the player.\n**Bugged**.",
+    [";flashstep on"] = "Flashstep enabled.\nClick anywhere on the screen to instantly teleport.",
+    [";flashstep off"] = "Flashstep disabled.\nTeleportation feature is turned off.",
+    [";object esp on"] = "Enabled ESP for objects.\nObjects are now highlighted.",
+    [";object esp off"] = "Turned off ESP for objects.\nObjects are no longer highlighted.",
+    [";wall on"] = "Walk-through walls enabled.\nYou can now pass through walls and objects.",
+    [";wall off"] = "Walk-through walls disabled.\nNormal collision with walls restored.",
+    [";spectate username"] = "Started spectating the player.\nYou are now observing their actions.",
+    [";spectate end"] = "Stopped spectating.\nYou are no longer observing the player.",
+    [";clone username"] = "Cloned the player.\nA copy of the player has been created.",
+    [";set point"] = "Teleport point set.\nYour current location is saved.",
+    [";teleport to point"] = "Teleported to the saved point.\nMoved to the location set by ;set point.",
+    [";walkthrough"] = "Walk-through mode enabled.\nYou can now pass through selected \nobjects and walls.",
+    [";walkthrough off"] = "Walk-through mode disabled.\nNormal collision with objects restored.",
+    [";scale"] = "scale mode activated/n double tap on an object to scale",
+    [";disablescale"] = "Scaling disabled.",
+    [";spin"] = "Player spinning at specified speed.\nAdjust the spinning rate with <speed>.",
+    [";unspin"] = "Stopped spinning.\nYou are no longer spinning.",
+    [";fling"] = "fling mode is temporarily unavailable\n use combination of ;spin and ;pt",
+    [";noclip"] = "No-clip mode enabled.\nYou can now move through walls and objects.",
+    [";clip"] = "No-clip mode disabled.\nNormal collision with walls and objects restored.",
+    [";flip"] = "Player flipped 😭🤯.",
+    [";swim"] = "Swimming mode enabled.\n Life could be dream! 🤣",
+    [";unswim"] = "Swimming mode disabled.\nYou are no longer in dream 😭.",
+    [";fly"] = "Flying mode enabled.\nYou can now fly around the game.",
+    [";fly"] = "try ;fly 999999\n to go crazy ☠️.",
+    [";unfly"] = "Flying mode disabled.\nYou are no longer flying.",
+    [";hop"] = "bye bye friend 💀👍👍.",
+    [";rejoin"] = "see ya! 😁.",
+    [";kickself"] = "no way why would bro\kick himself? 💀👍.",
+    [";glitch"] = "Glitch mode UI enabled",
+    [";closeglitch"] = "Glitch mode closed.",
+    [";unglitch"] = "Glitch UI closed.",
+    [";revolve"] = "you are now revolving\n around the player.\n I wonder why? 😴",
+    [";unrevolve"] = "Stopped revolving.",
+    [";searchobject"] = "object search mode enabled\n search UI Opened \n we permit partial names.",
+    [";follow"] = "Following the player.\nYou are now tracking the specified player.",
+    [";unfollow"] = "Stopped following.\nYou are no longer tracking the player.",
+    [";reset"] = "reseting charector...",
+    [";antilag"] = "Anti-lag activated.\nGame performance has been optimized.",
+    [";roleinfo"] = "Displayed role information.\nShows details about the specified player's role.",
+    [";espnonvisibleobj/;envo"] = "Enabled ESP for non-visible objects.\nInvisible objects are now highlighted.",
+    [";offenvo"] = "Disabled ESP for non-visible objects.\nInvisible objects are no longer highlighted.",
+    [";light"] = "feature temporarily unavailable\n sorry for inconvenience",
+    [";setp"] = "Set teleport point.\nYour current location is saved for later use.",
+    [";tpp"] = "Teleported to the saved point.\nMoved to the location set by ;setp.",
+    [";objecttp"] = "Teleported to the specified object.\nYou have moved to the object named <objectname>.",
+    [";jumpscare"] = "Triggered a jumpscare for the player 🤣",
+    [";savegame"] = "depends on the executor\n you are using.",
+    [";gravity"] = "Adjusted gravity.\nGravity set to <force>.",
+    [";night"] = "Switched to nighttime.\nThe game environment is now dark 🌙",
+    [";day"] = "Switched to daytime.\nThe game environment is now bright ☀️",
+    [";coordinates"] = "Displayed current coordinates.\nShows your position in the game world.",
+    [";offcoordinates"] = "Coordinates display turned off.\nYour position is no longer shown.",
+    [";fill"] = "Filled area with\n selected material",
+    [";fill"] = "Filled area with\n selected material",
+    [";fov"] = "Field of view adjusted.\nSet to <value>.",
+    [";fovreset"] = "Field of view reset.\nRestored default settings.",
+    [";xray on"] = "X-ray vision enabled.\nYou can see through objects 🌚.",
+    [";xray off"] = "X-ray vision disabled.\nNormal visibility restored.",
+    [";jump"] = "Jump height set to <value>.\nAdjusts how high you can jump.",
+    [";speed"] = "Movement speed set to <value>.\nAdjusts how fast you move.",
+    [";health"] = "Health set to <value>.\nAdjusts your health points.",
+    [";resetstats"] = "Stats reset.\nRestored default values for health, speed, etc.",
+    [";hitbox"] = "Adjusted hitbox size.\nThe specified player’s hitbox is set to <size>.",
+    [";hitboxall"] = "Adjusted hitbox size for all players.\nAll players’ hitboxes are set to <size>.",
+    [";glitch2"] = "Activated glitch2 mode\nshake like nver before 💀🌚👍",
+    [";unglitch2"] = "Disabled glitch2 mode.",
+    [";bringobj"] = "Brought the specified object to you",
+    [";pt"] = "set all player to walk-throughable",
+    [";pt off"] = "pt mode deactivated.",
+    [";fog"] = "fog got set to the provided density",
+    [";fogclear"] = "cleared fog.",
+    [";fogcolor"] = "set a color Red, Blue\n Cyan, Yellow, Green",
+    [";shake"] = "shaky shaky 🤯😎",
+    [";stopshake"] = "deactivated shake mode.",
+    [";donate"] = "Opened donation page ♥️\n helps us further improve our \n features ."
+}
+
+-- Function to handle chat messages
+local function onChatMessage(message)
+    local lowerMessage = message:lower()
+    for command, text in pairs(commandMessages) do
+        if lowerMessage:sub(1, #command) == command then
+            createNotification(text)
+            break
+        end
+    end
+end
+
+-- Connect the chat message function
+game.Players.LocalPlayer.Chatted:Connect(onChatMessage)

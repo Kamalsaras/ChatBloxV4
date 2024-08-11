@@ -1,0 +1,40 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+-- Store the original gravity value
+local originalGravity = Workspace.Gravity
+
+-- Function to set gravity
+local function setGravity(strength)
+    Workspace.Gravity = strength
+    print("Gravity set to: " .. strength)
+end
+
+-- Function to reset gravity
+local function resetGravity()
+    Workspace.Gravity = originalGravity
+    print("Gravity reset to original value.")
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";gravity" and #args == 2 then
+        local strength = tonumber(args[2])
+        if strength then
+            setGravity(strength)
+        else
+            print("Invalid gravity strength")
+        end
+    elseif command == ";gravityreset" then
+        resetGravity()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

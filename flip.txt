@@ -1,0 +1,48 @@
+local player = game.Players.LocalPlayer
+
+-- Function to perform a backflip
+local function performBackflip()
+    local character = player.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    -- Ensure the character is grounded
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.Health > 0 then
+        -- Create a BodyGyro to handle the rotation
+        local bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.CFrame = humanoidRootPart.CFrame
+        bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)  -- Allow large rotational force
+        bodyGyro.P = 3000  -- High power for strong rotational control
+        bodyGyro.Parent = humanoidRootPart
+
+        -- Create a BodyVelocity to apply upward force
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 50, 0)  -- Apply upward force
+        bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)  -- Allow large force in the upward direction
+        bodyVelocity.P = 3000  -- High power for strong force
+        bodyVelocity.Parent = humanoidRootPart
+
+        -- Tween to rotate 360 degrees around the X-axis
+        local tweenService = game:GetService("TweenService")
+        local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)  -- Duration of 3 seconds
+        local goalCFrame = humanoidRootPart.CFrame * CFrame.Angles(math.rad(360), 0, 0)
+        local tween = tweenService:Create(humanoidRootPart, tweenInfo, {CFrame = goalCFrame})
+
+        tween:Play()
+        tween.Completed:Connect(function()
+            -- Clean up BodyGyro and BodyVelocity after rotation is complete
+            bodyGyro:Destroy()
+            bodyVelocity:Destroy()
+        end)
+    end
+end
+
+-- Listen for chat commands
+player.Chatted:Connect(function(message)
+    if message:lower() == ";flip" then
+        performBackflip()
+    end
+end)

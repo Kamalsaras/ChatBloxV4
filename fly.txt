@@ -1,0 +1,195 @@
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Variables
+local player = Players.LocalPlayer
+local swimming = false
+local oldgrav
+local gravReset
+local swimbeat
+
+-- Function to start swimming
+local function startSwimming()
+    if not swimming and player and player.Character and player.Character:FindFirstChildWhichIsA("Humanoid") then
+        oldgrav = Workspace.Gravity
+        Workspace.Gravity = 0
+
+        local swimDied = function()
+            Workspace.Gravity = oldgrav
+            swimming = false
+        end
+
+        local humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+        gravReset = humanoid.Died:Connect(swimDied)
+
+        local enums = Enum.HumanoidStateType:GetEnumItems()
+        table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
+        for _, state in pairs(enums) do
+            humanoid:SetStateEnabled(state, false)
+        end
+
+        humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+
+        swimbeat = RunService.Heartbeat:Connect(function()
+            pcall(function()
+                player.Character.HumanoidRootPart.Velocity = 
+                    ((humanoid.MoveDirection ~= Vector3.new() or UserInputService:IsKeyDown(Enum.KeyCode.Space))
+                    and player.Character.HumanoidRootPart.Velocity or Vector3.new())
+            end)
+        end)
+
+        swimming = true
+    end
+end
+
+-- Function to stop swimming
+local function stopSwimming()
+    if player and player.Character and player.Character:FindFirstChildWhichIsA("Humanoid") then
+        Workspace.Gravity = oldgrav
+        swimming = false
+
+        if gravReset then
+            gravReset:Disconnect()
+        end
+
+        if swimbeat then
+            swimbeat:Disconnect()
+            swimbeat = nil
+        end
+
+        local humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+        local enums = Enum.HumanoidStateType:GetEnumItems()
+        table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
+        for _, state in pairs(enums) do
+            humanoid:SetStateEnabled(state, true)
+        end
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";fly" then
+        startSwimming()
+    elseif command == ";unfly" then
+        stopSwimming()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)
+
+-- Services
+local Players = game:GetService("Players")
+
+-- Variables
+local player = Players.LocalPlayer
+local defaultSpeed = 16  -- Default walk speed
+local boostedSpeed = 120 -- Boosted walk speed
+
+-- Function to boost speed
+local function boostSpeed()
+    if player and player.Character and player.Character:FindFirstChildWhichIsA("Humanoid") then
+        player.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = boostedSpeed
+    end
+end
+
+-- Function to reset speed
+local function resetSpeed()
+    if player and player.Character and player.Character:FindFirstChildWhichIsA("Humanoid") then
+        player.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = defaultSpeed
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local command = message:lower()
+
+    if command == ";fly" then
+        boostSpeed()
+    elseif command == ";unfly" then
+        resetSpeed()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)
+-- Services
+local Players = game:GetService("Players")
+
+-- Variables
+local player = Players.LocalPlayer
+local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+local animateScript
+
+-- Function to disable animations
+local function disableAnimations()
+    if humanoid and player.Character then
+        animateScript = player.Character:FindFirstChild("Animate")
+        if animateScript then
+            animateScript.Disabled = true
+        end
+    end
+end
+
+-- Function to enable animations
+local function enableAnimations()
+    if animateScript and humanoid and player.Character then
+        animateScript.Disabled = false
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local command = message:lower()
+
+    if command == ";fly" then
+        disableAnimations()
+    elseif command == ";unfly" then
+        enableAnimations()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)
+-- Services
+local Players = game:GetService("Players")
+
+-- Variables
+local player = Players.LocalPlayer
+local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+local originalWalkSpeed = humanoid and humanoid.WalkSpeed or 16
+
+-- Function to set player speed
+local function setPlayerSpeed(speed)
+    if humanoid then
+        humanoid.WalkSpeed = speed
+    end
+end
+
+-- Function to reset player speed
+local function resetPlayerSpeed()
+    if humanoid then
+        humanoid.WalkSpeed = originalWalkSpeed
+    end
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";fly" and tonumber(args[2]) then
+        setPlayerSpeed(tonumber(args[2]))
+    elseif command == ";unfly" then
+        resetPlayerSpeed()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

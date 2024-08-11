@@ -1,0 +1,27 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Function to save the game
+local function saveGame()
+    if saveinstance then
+        print("Saving game might depend on the executor you're using")
+        saveinstance() -- This function may require a compatible executor
+    else
+        print("saveinstance() function is not available in your executor.")
+    end
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";savegame" then
+        saveGame()
+    end
+end
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

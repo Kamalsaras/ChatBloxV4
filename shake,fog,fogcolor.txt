@@ -1,0 +1,121 @@
+-- Services
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Variables
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local mapGui = nil
+local screenShakeEnabled = false
+local screenShakeIntensity = 0
+
+-- Utility function to parse color names
+local function getColorFromName(colorName)
+    local color = Color3.fromRGB(255, 255, 255)  -- Default to white
+    if colorName == "red" then
+        color = Color3.fromRGB(255, 0, 0)
+    elseif colorName == "green" then
+        color = Color3.fromRGB(0, 255, 0)
+    elseif colorName == "blue" then
+        color = Color3.fromRGB(0, 0, 255)
+    elseif colorName == "yellow" then
+        color = Color3.fromRGB(255, 255, 0)
+    elseif colorName == "cyan" then
+        color = Color3.fromRGB(0, 255, 255)
+    elseif colorName == "magenta" then
+        color = Color3.fromRGB(255, 0, 255)
+    end
+    return color
+end
+
+-- Function to create map UI
+local function createMapUI()
+    if mapGui then
+        mapGui:Destroy()
+    end
+
+    mapGui = Instance.new("ScreenGui")
+    mapGui.Name = "MapGUI"
+    mapGui.ResetOnSpawn = false
+    mapGui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.3, 0, 0.3, 0)
+    frame.Position = UDim2.new(0.7, 0, 0.7, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = mapGui
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+    closeButton.Position = UDim2.new(0.9, 0, 0, 0)
+    closeButton.Text = "Close"
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Parent = frame
+
+    closeButton.MouseButton1Click:Connect(function()
+        if mapGui then
+            mapGui:Destroy()
+        end
+    end)
+end
+
+-- Command handlers
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";shoansjjwmap" then
+        createMapUI()
+    elseif command == ";raiuksjsn" then
+        Lighting.Rain.Enabled = true
+        Lighting.Snow.Enabled = false
+    elseif command == ";ssshhsnow" then
+        Lighting.Rain.Enabled = false
+        Lighting.Snow.Enabled = true
+    elseif command == ";clbsbsear" then
+        Lighting.Rain.Enabled = false
+        Lighting.Snow.Enabled = false
+    elseif command == ";fog" and args[2] then
+        local density = tonumber(args[2])
+        if density then
+            Lighting.FogEnd = density
+        end
+    elseif command == ";fogcolor" and args[2] then
+        local colorName = args[2]:lower()
+        local color = getColorFromName(colorName)
+        Lighting.FogColor = color
+    elseif command == ";error91727" and args[2] then
+        local colorName = args[2]:lower()
+        local color = getColorFromName(colorName)
+        Lighting.ColorCorrection.TintColor = color
+    elseif command == ";fogclear" then
+        Lighting.FogEnd = math.huge
+        Lighting.FogColor = Color3.fromRGB(255, 255, 255)
+    elseif command == ";shake" and args[2] then
+        screenShakeIntensity = tonumber(args[2]) or 0
+        screenShakeEnabled = screenShakeIntensity > 0
+    elseif command == ";stopshake" then
+        screenShakeEnabled = false
+    end
+end
+
+-- Handle screen shake
+RunService.RenderStepped:Connect(function(deltaTime)
+    if screenShakeEnabled then
+        local offset = Vector3.new(
+            math.random() * screenShakeIntensity - screenShakeIntensity / 2,
+            math.random() * screenShakeIntensity - screenShakeIntensity / 2,
+            0
+        )
+        if player.Character and player.Character.PrimaryPart then
+            player.Character:SetPrimaryPartCFrame(player.Character.PrimaryPart.CFrame * CFrame.new(offset))
+        end
+    end
+end)
+
+-- Connect chat listener
+player.Chatted:Connect(onChatted)

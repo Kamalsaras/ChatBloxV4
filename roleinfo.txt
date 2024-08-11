@@ -1,0 +1,84 @@
+-- LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+-- UI elements
+local function createRoleInfoUI(targetPlayer)
+    -- Create ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "RoleInfoMenu"
+    screenGui.Parent = Player:WaitForChild("PlayerGui")
+
+    -- Create Frame
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 150)
+    frame.Position = UDim2.new(0.5, -150, 0.5, -75)
+    frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    frame.Parent = screenGui
+
+    -- Create TextLabel for player info
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Size = UDim2.new(1, 0, 0.8, 0)
+    infoLabel.Position = UDim2.new(0, 0, 0, 0)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    infoLabel.TextStrokeTransparency = 0.5
+    infoLabel.Text = targetPlayer.Name .. "'s Role: " .. (targetPlayer.Team and targetPlayer.Team.Name or "No Team")
+    infoLabel.TextScaled = true
+    infoLabel.Parent = frame
+
+    -- Create Close Button
+    local closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0, 80, 0, 30)
+    closeButton.Position = UDim2.new(0.5, -40, 0.85, 0)
+    closeButton.Text = "Close"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    closeButton.Parent = frame
+
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+end
+
+-- Function to find a player by name
+local function findPlayerByPartialName(partialName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name:lower():find(partialName:lower()) then
+            return player
+        end
+    end
+    return nil
+end
+
+-- Handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";roleinfo" and args[2] then
+        local playerName = table.concat(args, " ", 2)
+        local targetPlayer = findPlayerByPartialName(playerName)
+
+        if targetPlayer then
+            createRoleInfoUI(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    end
+end
+
+-- Connect chat listener
+Player.Chatted:Connect(onChatted)
+
+-- Ensure the UI persists after player reset
+Player.CharacterAdded:Connect(function()
+    wait(1) -- Wait for the character to fully load
+    local existingMenu = Player:FindFirstChild("PlayerGui"):FindFirstChild("RoleInfoMenu")
+    if existingMenu then
+        existingMenu:Destroy()
+    end
+end)
